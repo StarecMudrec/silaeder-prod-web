@@ -14,10 +14,14 @@ class Countries(db.Model):
     alpha3 = db.Column(db.String(3), nullable=False)
     region = db.Column(db.String(100), nullable=True)
     
-# class User(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     name = db.Column(db.String(100), nullable=False, unique=True)
-#     description = db.Column(db.Text, nullable=True)
+class User(db.Model):
+    login = db.Column(db.String(30), primary_key=True, nullable=False)
+    email = db.Column(db.String(50), nullable=False)
+    password = db.Column(db.String(100), nullable=False)
+    countryCode = db.Column(db.String(2), nullable=False)
+    isPublic = db.Column(db.Boolean(), nullable=False)
+    phone = db.Column(db.String(), nullable=False)
+    image = db.Column(db.Text, nullable=False)
 
 # создаем базу данных, если ее пока нет
 with app.app_context():
@@ -32,6 +36,16 @@ def present_country(country):
         "region": country.region
     }
 
+def present_user(user):
+    return {
+        "login": user.login,
+        "email": user.email,
+        "password": user.password,
+        "countryCode": user.countryCode,
+        "isPublic": user.isPublic,
+        "phone": user.phone,
+        "image": user.image
+    }
 # ендпоинты - реагируют на запросы пользователей
 
 
@@ -50,9 +64,35 @@ def get_filter_by_region_countries():
 @app.route("/api/countries/<alpha2>", methods=["GET"])
 def get_filter_by_alpha2_countries(alpha2):
     countries = Countries.query.all()
-    print(alpha2)
+    # print(alpha2)
     countries_descriptions = [present_country(country) for country in countries if present_country(country)["alpha2"] == alpha2]
     return jsonify(countries_descriptions[0])
+
+@app.route("/api/auth/register", methods=["POST"])
+def post_register_user():
+    user_data = request.get_json()
+    users = User.query.all()
+    countries = Countries.query.all()
+    # print(alpha2)
+    users_usernames = [present_user(user)["login"] for user in users]
+    codes = [present_country(country)["alpha2"] for country in countries]
+    # print(user_data)
+    response = user_data
+    response_code = 201
+    if user_data["countryCode"] not in codes : 
+        response = {"reason": "Invalid country code"}
+        response_code = 400
+    if len(user_data["login"]) > 30 : 
+        response = {"reason": "Login length exceeded the limit"}
+        response_code = 400
+    if len(user_data["email"]) > 50 : 
+        response = {"reason": "Email length exceeded the limit"}
+        response_code = 400
+    if user_data["login"] in users_usernames : 
+        response = {"reason": "Username already exists"}
+        response_code = 400
+    print(jsonify(response), response_code)
+    return jsonify(response), response_code
 
 
 if __name__ == "__main__":
