@@ -71,27 +71,56 @@ def get_filter_by_alpha2_countries(alpha2):
 @app.route("/api/auth/register", methods=["POST"])
 def post_register_user():
     user_data = request.get_json()
+    #print(user_data)
     users = User.query.all()
     countries = Countries.query.all()
     # print(alpha2)
     users_usernames = [present_user(user)["login"] for user in users]
     codes = [present_country(country)["alpha2"] for country in countries]
     # print(user_data)
-    response = user_data
+    if "login" not in user_data : 
+        response = {"reason": "Login required!"}
+        response_code = 400
+        print((response), response_code)
+        return jsonify(response), response_code
+    if "email" not in user_data : 
+        response = {"reason": "Email required!"}
+        response_code = 400
+        print((response), response_code)
+        return jsonify(response), response_code
+    if "countryCode" not in user_data : 
+        response = {"reason": "Country code required!"}
+        response_code = 400
+        print((response), response_code)
+        return jsonify(response), response_code
+    if "isPublic" not in user_data : 
+        response = {"reason": "isPublic required!"}
+        response_code = 400
+        print((response), response_code)
+        return jsonify(response), response_code
+    response = {"profile": {"login": user_data["login"], "email": user_data["email"], "countryCode": user_data["countryCode"], "isPublic": user_data["isPublic"], "phone": user_data["phone"]}}
     response_code = 201
     if user_data["countryCode"] not in codes : 
         response = {"reason": "Invalid country code"}
         response_code = 400
+        print((response), response_code)
+        return jsonify(response), response_code
     if len(user_data["login"]) > 30 : 
         response = {"reason": "Login length exceeded the limit"}
         response_code = 400
+        print((response), response_code)
+        return jsonify(response), response_code
     if len(user_data["email"]) > 50 : 
         response = {"reason": "Email length exceeded the limit"}
         response_code = 400
+        print((response), response_code)
+        return jsonify(response), response_code
     if user_data["login"] in users_usernames : 
         response = {"reason": "Username already exists"}
         response_code = 400
-    print(jsonify(response), response_code)
+        print((response), response_code)
+        return jsonify(response), response_code
+    print((response), response_code)
     return jsonify(response), response_code
 
 
